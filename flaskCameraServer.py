@@ -14,9 +14,12 @@ app = Flask(__name__)
 
 
 def capture_camera(cam_num):
-    cam = cv2.VideoCapture(cam_num)
-    retval, image = cam.read()
-    cam.release()
+    try:
+        cam = cv2.VideoCapture(cam_num)
+        retval, image = cam.read()
+    finally:
+        cam.release()
+        cv2.destroyAllWindows()
     retval, buff = cv2.imencode('.jpg', image)
     b64jpg = base64.b64encode(buff)
     return b64jpg
@@ -42,6 +45,7 @@ def gen_frames(camera_idx):
             ret, cv2_im = cap.read()
         finally:
             cap.release()
+            cv2.destroyAllWindows()
         if not ret:
             break
 
@@ -78,5 +82,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
     CAMERAS = identify_cameras()
+    print(f"Supporting Cameras: {CAMERAS}")
     app.run(debug=True, host="0.0.0.0", use_reloader=False)
 
