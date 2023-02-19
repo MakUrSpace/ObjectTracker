@@ -13,21 +13,23 @@
     <script>
 	function refreshInterest(){
         	document.getElementById('interestReport').contentWindow.location.reload();
-		setTimeout(refreshInterest, 100);
+		setTimeout(refreshInterest, 10000);
 	}
     </script>
 </head>
 <body onload="refreshInterest();">
-<div class="container">
-    <div class="row">
-        <div class="col-lg-8  offset-lg-2">
-            <h3 class="mt-5">Live Streaming</h3>
-            <img src="{{ url_for('video_feed') }}" width="100%">
-        </div>
-    </div>
-</div>
 <div>
-	<IFRAME id="interestReport" src="/interest"></IFRAME>
+	<IFRAME id="interestReport" src="{{ url_for('camera_list') }}"></IFRAME>
+</div>
+<div class="container">
+    {% for cam in cameras %}
+        <div class="row">
+            <div class="col-lg-8  offset-lg-2">
+                <h3 class="mt-5">Live Streaming</h3>
+                <img src="{{ url_for('video_feed', camera_idx=cam) }}" width="100%">
+            </div>
+        </div>
+    {% endfor %}
 </div>
 </body>
 </html>
