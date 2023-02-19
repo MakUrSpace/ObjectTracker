@@ -13,45 +13,18 @@ CAMERAS = []
 app = Flask(__name__)
 
 
-def capture_camera(cam_num):
-    try:
-        cam = cv2.VideoCapture(cam_num)
-        retval, image = cam.read()
-    finally:
-        cam.release()
-        cv2.destroyAllWindows()
-    retval, buff = cv2.imencode('.jpg', image)
-    b64jpg = base64.b64encode(buff)
-    return b64jpg
-
-
-def identify_cameras(device_numbers=list(range(6))):
-    functional = []
-    for dn in device_numbers:
-        try:
-            img = capture_camera(dn)
-            functional.append(dn)
-        except Exception as e:
-            continue
-    return functional
+def identify_cameras():
+    cameraOutputs = os.listdir("output")
+    cameras = [fn.split(".")[0][3:] for fn in cameraOutputs]
+    return cameras
 
 
 def gen_frames(camera_idx):
-    assert int(camera_idx)  in CAMERAS, f"Invalid Camera: {camera_idx}. Valid Cameras: {CAMERAS}"
-
     while True:
-        try:
-            cap = cv2.VideoCapture(camera_idx)
-            ret, cv2_im = cap.read()
-        finally:
-            cap.release()
-            cv2.destroyAllWindows()
-        if not ret:
-            break
-
-        retval, buff = cv2.imencode('.jpg', cv2_im)
+        with open(f"output/cam{camera_idx}.jpg", "rb") as f:
+            jpg = f.read()
         yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + buff.tobytes() + b'\r\n')
+               b'Content-Type: image/jpeg\r\n\r\n' + jpg + b'\r\n')
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
@@ -60,11 +33,6 @@ def gen_frames(camera_idx):
 def video_feed(camera_idx):
     #Video streaming route. Put this in the src attribute of an img tag
     return Response(gen_frames(int(camera_idx)), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-@app.route('/still/<camera_idx>')
-def still(camera_idx):
-    return Response(capture_camera(int(camera_idx)))
 
 
 @app.route('/camera_list')
